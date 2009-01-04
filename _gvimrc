@@ -1,0 +1,86 @@
+" Filename:      .gvimrc
+" Description:   Vim configuration file (GUI specific)
+" Last Modified: Tr 2008-12-17 11:31:33 (FLE Standard Time)
+
+set guioptions-=tT  " Disable the toolbar and menu tearoffs
+set guitabtooltip=%{InfoGuiTooltip()}
+set balloonexpr=FoldSpellBalloon()
+
+if has("unix")
+    set guifont=DejaVu\ Sans\ Mono\ 8
+elseif has("win16") || has("win32") || has("win64") || has("win95")
+    set guifont=DejaVu_Sans_Mono:h8:cANSI
+elseif has("mac")
+    set guifont=Monaco:h8
+endif
+
+" Maximize window
+au GUIEnter * simalt ~x
+
+"{{{ Functions
+
+function! InfoGuiTooltip()
+    "get window count
+    let bufferlist = 'Buffers:'
+    "get name of active buffers in windows
+    for i in tabpagebuflist()
+        let buffername = bufname(i)
+        if strlen(buffername) == 0
+            let buffername='[No Name]'
+        endif
+        let bufferlist .= "\n\t".fnamemodify(buffername,':t')
+    endfor
+    let buffername = bufname($)
+    if buffername == ''
+        return '[No Name]'
+    endif
+    return buffername."\n".bufferlist
+endfunction
+
+function! FoldSpellBalloon()
+    let fold_start = foldclosed(v:beval_lnum)
+    let fold_end = foldclosedend(v:beval_lnum)
+    let lines = [] " Detect if we are in a fold
+    if fold_start < 0
+        " Detect if we are on a misspelled word
+        let lines = spellsuggest(spellbadword(v:beval_text)[0], 5, 0)
+    else
+        " we are in a fold
+        let num_lines = fold_end-fold_start+1
+        " if we have too many lines in fold, show only the first 14
+        " and the last 14 lines
+        if num_lines > 31
+            let lines = getline(fold_start, fold_start + 14)
+            let lines += ['-- Snipped '.(num_lines-30).' lines --']
+            let lines += getline(fold_end-14, fold_end)
+        else
+            "less than 30 lines, lets show all of them
+            let lines = getline(fold_start, fold_end)
+        endif
+    endif
+    " return result
+    return join(lines, has("balloon_multiline") ? "\n" : " ")
+endfunction
+
+function! ToggleMenubar()
+    if &guioptions =~ 'm'
+        set guioptions-=m
+    else
+        set guioptions+=m
+    endif
+endfunction
+
+function! ToggleToolbar()
+    if &guioptions =~ 'T'
+        set guioptions-=T
+    else
+        set guioptions+=T
+    endif
+endfunction
+"}}}
+"{{{ Mappings
+
+nnoremap <silent> <leader>tmb :call ToggleMenubar()<cr>
+nnoremap <silent> <leader>ttb :call ToggleToolbar()<cr>
+
+"}}}
