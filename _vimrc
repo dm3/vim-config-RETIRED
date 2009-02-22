@@ -1,17 +1,43 @@
-" Filename:      .gvimrc
+" Filename:      .vimrc
 " Description:   Vim configuration file (GUI specific)
-" Last Modified: Kt 2008-12-18 16:57:22 (FLE Standard Time)
+" Last Modified: Last Modified: бс 2009-02-21 22:26:34 (FLE Standard Time)
 
 set nocompatible
 source $VIMRUNTIME/mswin.vim
 behave mswin
 
-" Necesary  for lots of cool vim things
-set nocompatible
+" English, please
+set langmenu=en_gb.utf-8
+language en
 
-" This is totally awesome - remap jj to escape in insert mode.  You'll never type jj anyway, so it's great!
+" Use english for spellchecking, but don't spellcheck by default
+if version >= 700
+   set spl=en spell
+   set nospell
+endif
+
+set backspace=2
+
+" This shows what you are typing as a command.
+set showcmd
+
+" Needed for Syntax Highlighting and stuff
+filetype plugin indent on
+syntax enable
+set grepprg=grep\ -nH\ $*
+
+" Line Numbers PWN!
+set number
+
+" When I close a tab, remove the buffer
+set nohidden
+
+" Set off the other paren
+highlight MatchParen ctermbg=4
+
+" Remap jj and kk to switch to escape mode
 inoremap jj <Esc>
-
+inoremap kk <Esc>
 
 "{{{Files, Backup
 
@@ -28,8 +54,7 @@ set directory=$VIMRUNTIME/.vim/tmp
 
 augroup scala-project
   au!
-  autocmd BufNewFile,BufRead    s*/project/x/*       lcd c:/projektai/learning-scala/
-  autocmd BufNewFile,BufRead    s*/project/x/*       compiler maven2
+  autocmd BufNewFile,BufRead    */development/projects/*       compiler scala
 augroup END
 
 " Highlight all occurences of word under cursor
@@ -126,33 +151,6 @@ set sidescrolloff=5  " Lines visible to the left/right of cursor when scrolling
 set tabpagemax=128  "Maximum number of tabs open
 
 "}}}
-" This shows what you are typing as a command.  I love this!
-set showcmd
-
-" Needed for Syntax Highlighting and stuff
-filetype plugin indent on
-syntax enable
-set grepprg=grep\ -nH\ $*
-
-" Use english for spellchecking, but don't spellcheck by default
-if version >= 700
-   set spl=en spell
-   set nospell
-endif
-
-compiler maven2
-
-" Got backspace?
-set backspace=2
-
-" Line Numbers PWN!
-set number
-
-" When I close a tab, remove the buffer
-set nohidden
-
-" Set off the other paren
-highlight MatchParen ctermbg=4
 " Plugin Settings ---------------------------------------------------------{{{1
 
 let timestamp_format = '%a %Y-%m-%d %H:%M:%S (%z)'
@@ -342,16 +340,16 @@ nnoremap <silent> <space>     :silent call ToggleFold()<cr>
 nnoremap <leader>h :help<space>
 
 " Start search with word under cursor
-nnoremap <leader>z :%s/\<<c-r>=expand("<cword>")<cr>\>/
-vnoremap <leader>z :<c-u>%s/\<<c-r>*\>/
+nnoremap <leader>z :s/\<<c-r>=expand("<cword>")<cr>\>/
+vnoremap <leader>z :<c-u>s/\<<c-r>*\>/
 
 " Start grep with word under cursor
 nnoremap <leader>G :GrepUnder /<c-r>=expand("<cword>")<cr>/g
 vnoremap <leader>G :<c-u>GrepUnder /<c-r>*/g
 
 " Standard tab navigation
-nmap <c-tab>   gt
-nmap <c-s-tab> gT
+nnoremap <c-l> gt
+nnoremap <c-h> gT
 
 " Yank to end of line
 nnoremap Y y$
@@ -367,4 +365,5 @@ vmap <silent> <Leader>cc <Plug>VisualComment
 vmap <silent> <Leader>uc <Plug>VisualDeComment
 vmap <silent> <Leader>eht <Plug>VisualTraditional
 vmap <silent> <Leader>ehf <Plug>VisualFirstLine
+
 "}}}
