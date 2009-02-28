@@ -41,8 +41,6 @@ inoremap kk <Esc>
 
 "{{{Files, Backup
 
-"Lookup ctags "tags" file up the directory, until one is found:
-set tags=tags;/
 
 " Keep backups in one place
 set backup
@@ -52,10 +50,15 @@ set directory=$VIMRUNTIME/.vim/tmp
 "}}}
 "{{{Auto Commands
 
-augroup scala-project
-  au!
-  autocmd BufNewFile,BufRead    */development/projects/*       compiler scala
-augroup END
+"{{{ Ctags
+
+" automatically set tags variable when editing
+au BufRead,BufNewFile *.java setlocal tags+=$JAVA_HOME\src\tags
+au BufRead,BufNewFile *.scala setlocal tags+=$SCALA_HOME\src\tags,$JAVA_HOME\src\tags
+"
+"Lookup ctags "tags" file up the directory, until one is found:
+set tags=tags;/
+"}}}
 
 " Highlight all occurences of word under cursor
 highlight flicker guibg=LightCyan
@@ -173,10 +176,15 @@ let Tlist_Exit_OnlyWindow = 1
 let Tlist_File_Fold_Auto_Close = 1
 let Tlist_GainFocus_On_ToggleOpen = 1
 let Tlist_Inc_Winwidth = 0
-let Tlist_Show_One_File = 1
+let Tlist_Show_One_File = 0
 let Tlist_Auto_Highlight_Tag = 1
 let Tlist_Auto_Update = 1
 let Tlist_Highlight_Tag_On_BufEnter = 1
+
+let tlist_def_scala_settings = 'scala;p:package;c:class;t:trait;' .
+                                 \ 'T:type;m:method;' .
+                                 \ 'c:case class;o:object;' .
+                                 \ 'C:constant;l:local variable'
 
 "}}}
 " Abbreviations -----------------------------------------------------------{{{1
@@ -238,7 +246,8 @@ endfunction
 
 " Edit vim config files (if they exist)
 function! EditConfig()
-    for config in ['$MYGVIMRC', '$MYVIMRC']
+    " for config in ['$MYGVIMRC', '$MYVIMRC']
+    for config in ['$MYVIMRC']
         if exists(config)
             execute 'tabedit '.config
         endif
@@ -320,24 +329,51 @@ nnoremap <silent> <leader>TT  :tabnew<cr>
 nnoremap <silent> <leader>v   :call EditConfig()<cr>
 nnoremap <silent> <leader>dcf :cd%:h<cr>
 nnoremap <silent> <leader>fch :call ChooseOccurrences()<cr>
-nnoremap <silent> <leader>fe  :Explore<cr>
 nnoremap <silent> <leader>fn  :next<cr>
 nnoremap <silent> <leader>fp  :prev<cr>
-nnoremap <silent> <leader>fs  :Sexplore<cr>
-nnoremap <silent> <leader>fv  :Vexplore<cr>
-nnoremap <silent> <leader>mw  <c-w>_<c-w><bar>
 nnoremap <silent> <leader>nh  :nohlsearch<cr>
-nnoremap <silent> <leader>tcc :set cursorcolumn! cursorcolumn?<cr>
-nnoremap <silent> <leader>tcl :set cursorline! cursorline?<cr>
+nnoremap <silent> <leader>c :set cursorcolumn! cursorcolumn?<cr>
+nnoremap <silent> <leader>l :set cursorline! cursorline?<cr>
 nnoremap <silent> <leader>tlc :set list! list?<cr>
 nnoremap <silent> <leader>tln :set number! number?<cr>
-nnoremap <silent> <leader>tlw :set wrap! wrap?<cr>
-nnoremap <silent> <leader>tnt :NERDTreeToggle<cr>
-nnoremap <silent> <leader>ttl :TlistToggle<cr>
+nnoremap <silent> <leader>w :set wrap! wrap?<cr>
+nnoremap <silent> <leader>a :NERDTreeToggle<cr>
+nnoremap <silent> <leader>t :TlistToggle<cr>
 nnoremap <silent> <space>     :silent call ToggleFold()<cr>
 
-" Help shortcut
-nnoremap <leader>h :help<space>
+"{{{ FILE EXPLORER
+"vertical explorer rox
+map <S-F1> :Vexplore!<CR>
+imap <S-F1> <C-O>:Vexplore!<CR>
+
+" @Tookelso (git://github.com/Tookelso/vim-dotfiles.git)
+" Map Shift-F1 to be the fuzzy version of Explorer
+" As an example, if you want to launch file-mode Fuzzyfinder with the full
+" path of current buffer's directory, map like below:
+" The fancy modifiers tell the filename to reduce to homedir or current dir,
+" if possible
+map <F1> <C-r>=expand('%:~:.')[:-1-len(expand('%:~:.:t'))]<CR><CR>:FuzzyFinderFile<CR>
+nnoremap <F1> <ESC> :FuzzyFinderFile <C-r>=expand('%:~:.')[:-1-len(expand('%:~:.:t'))]<CR><CR>
+"}}}
+"{{{ FUZZY FINDER MAPPINGS
+" Fuzzy version of BufExplorer
+map <leader>bu :FuzzyFinderBuffer<CR>
+
+" Like "project explorer" in Textmate
+map <leader>e :FuzzyFinderFile \*\*/<CR>
+
+" Fuzzy's "refresh" method.
+map <leader>bc :FuzzyFinderRemoveCache<CR>
+map <leader>r :FuzzyFinderMruFile<CR>
+
+" Use \bm \ba for bookmark files
+map <F7> :FuzzyFinderBookmark<CR>
+map <S-F7> :FuzzyFinderAddBookmark<CR>
+
+" Fuzzy's "refresh" method.
+map <leader>bc :FuzzyFinderRemoveCache<CR>
+map <leader>r :FuzzyFinderMruFile<CR>
+"}}}
 
 " Start search with word under cursor
 nnoremap <leader>z :s/\<<c-r>=expand("<cword>")<cr>\>/
@@ -366,4 +402,34 @@ vmap <silent> <Leader>uc <Plug>VisualDeComment
 vmap <silent> <Leader>eht <Plug>VisualTraditional
 vmap <silent> <Leader>ehf <Plug>VisualFirstLine
 
+"}}}
+"{{{ Current Project
+let g:project_prefix = 'C:\development\projects\'
+let g:project_map = {'actors': g:project_prefix.'scala-actors', 'scala-maven': g:project_prefix.'maven-scala-plugin' }
+let g:default_project = g:project_prefix.'scala-actors'
+let g:current_project = g:default_project
+
+" automatically update tags for this project if file is inside the project
+au BufWrite *.scala
+            \ if stridx(expand("%:p"), g:current_project) > -1 |
+                \ call system("ctags -a -f ". g:current_project ."/tags --extra=+q " . expand("%:p")) |
+            \ endif
+
+function! Test()
+    execute ":!echo ".g:current_project.", ".expand("%:p")
+    execute ":!echo ".stridx(expand("%:p"), g:current_project)
+endfunction
+
+function! ToProj(path_to_project)
+    if has_key(g:project_map, a:path_to_project)
+        let g:current_project = g:project_map[a:path_to_project]
+    else
+        let g:current_project = a:path_to_project
+    endif
+    execute ":cd ". g:current_project
+"    execute ":TlistAddFilesRecursive ./src"
+    call system("ctags -R -f tags")
+endfunction
+
+nnoremap <silent> <leader>cp :call ToProj(g:default_project)<cr>
 "}}}
