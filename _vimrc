@@ -332,7 +332,7 @@ nnoremap <silent> <leader>fch :call ChooseOccurrences()<cr>
 nnoremap <silent> <leader>fn  :next<cr>
 nnoremap <silent> <leader>fp  :prev<cr>
 nnoremap <silent> <leader>nh  :nohlsearch<cr>
-nnoremap <silent> <leader>c :set cursorcolumn! cursorcolumn?<cr>
+nnoremap <silent> <leader>cl :set cursorcolumn! cursorcolumn?<cr>
 nnoremap <silent> <leader>l :set cursorline! cursorline?<cr>
 nnoremap <silent> <leader>tlc :set list! list?<cr>
 nnoremap <silent> <leader>tln :set number! number?<cr>
@@ -367,8 +367,8 @@ map <leader>bc :FuzzyFinderRemoveCache<CR>
 map <leader>r :FuzzyFinderMruFile<CR>
 
 " Use \bm \ba for bookmark files
-map <F7> :FuzzyFinderBookmark<CR>
-map <S-F7> :FuzzyFinderAddBookmark<CR>
+"map <F7> :FuzzyFinderBookmark<CR>
+"map <S-F7> :FuzzyFinderAddBookmark<CR>
 
 " Fuzzy's "refresh" method.
 map <leader>bc :FuzzyFinderRemoveCache<CR>
@@ -405,7 +405,7 @@ vmap <silent> <Leader>ehf <Plug>VisualFirstLine
 "}}}
 "{{{ Current Project
 let g:project_prefix = 'C:\development\projects\'
-let g:project_map = {'actors': g:project_prefix.'scala-actors', 'scala-maven': g:project_prefix.'maven-scala-plugin' }
+let g:project_map = {'actors': g:project_prefix.'scala-actors', 'scala-algorithms': g:project_prefix.'scala-algorithms', 'scala-maven': g:project_prefix.'maven-scala-plugin' }
 let g:default_project = g:project_prefix.'scala-actors'
 let g:current_project = g:default_project
 
@@ -427,9 +427,14 @@ function! ToProj(path_to_project)
         let g:current_project = a:path_to_project
     endif
     execute ":cd ". g:current_project
+    execute ":compiler! scala-fsc"
 "    execute ":TlistAddFilesRecursive ./src"
     call system("ctags -R -f tags")
 endfunction
+
+nnoremap <F6> :make<cr>
+nnoremap <F7> :copen<cr>
+nnoremap <F9> :!mvn scala:run -DmainClass=Main<cr>
 
 nnoremap <silent> <leader>cp :call ToProj(g:default_project)<cr>
 "}}}
