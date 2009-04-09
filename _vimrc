@@ -4,6 +4,7 @@
 
 set nocompatible
 source $VIMRUNTIME/mswin.vim
+source $VIM/vimfiles/scripts/unicodemacros.vim
 behave mswin
 
 " English, please
@@ -318,6 +319,18 @@ function! GrepUnder(query)
     echo Title
     cwindow
 endfunction
+
+function! GetVisual() range
+    let reg_save = getreg('"')
+    let regtype_save = getregtype('"')
+    let cb_save = &clipboard
+    set clipboard&
+    normal! ""gvy
+    let selection = getreg('"')
+    call setreg('"', reg_save, regtype_save)
+    let &clipboard = cb_save
+    return selection
+endfunction
 "}}}
 "{{{ Mappings
 
@@ -339,7 +352,8 @@ nnoremap <silent> <leader>tln :set number! number?<cr>
 nnoremap <silent> <leader>w :set wrap! wrap?<cr>
 nnoremap <silent> <leader>a :NERDTreeToggle<cr>
 nnoremap <silent> <leader>t :TlistToggle<cr>
-nnoremap <silent> <space>     :silent call ToggleFold()<cr>
+nnoremap <silent> <space>:silent call ToggleFold()<cr>
+nnoremap <silent> <leader>Z :call ToggleUnicodeChar(<c-r>=expand("<cword>")<cr>)<cr>
 
 "{{{ FILE EXPLORER
 "vertical explorer rox
@@ -375,9 +389,10 @@ map <leader>bc :FuzzyFinderRemoveCache<CR>
 map <leader>r :FuzzyFinderMruFile<CR>
 "}}}
 
-" Start search with word under cursor
-nnoremap <leader>z :s/\<<c-r>=expand("<cword>")<cr>\>/
-vnoremap <leader>z :<c-u>s/\<<c-r>*\>/
+" Start substitution with word under cursor
+nnoremap <leader>z :%s/\<<c-r>=expand("<cword>")<cr>\>/
+vnoremap <leader>x :<c-u>%s/\<<c-r>*\>/
+vnoremap <leader>z :s/<c-r>=GetVisual()<cr>/
 
 " Start grep with word under cursor
 nnoremap <leader>G :GrepUnder /<c-r>=expand("<cword>")<cr>/g
@@ -393,6 +408,8 @@ nnoremap Y y$
 " Paragraph formatting
 nnoremap Q gqap
 vnoremap Q gq
+
+"{{{ EHCOMMENT MAPPINGS
 nmap <silent> <Leader>cc <Plug>Comment
 nmap <silent> <Leader>uc <Plug>DeComment
 nmap <silent> <Leader>eht <Plug>Traditional
@@ -401,12 +418,11 @@ vmap <silent> <Leader>cc <Plug>VisualComment
 vmap <silent> <Leader>uc <Plug>VisualDeComment
 vmap <silent> <Leader>eht <Plug>VisualTraditional
 vmap <silent> <Leader>ehf <Plug>VisualFirstLine
-
 "}}}
 "{{{ Current Project
-let g:project_prefix = 'C:\development\projects\'
+let g:project_prefix = '/development/projects/'
 let g:project_map = {'actors': g:project_prefix.'scala-actors', 'scala-algorithms': g:project_prefix.'scala-algorithms', 'scala-maven': g:project_prefix.'maven-scala-plugin' }
-let g:default_project = g:project_prefix.'scala-actors'
+let g:default_project = g:project_prefix.'scala-algortihms'
 let g:current_project = g:default_project
 
 " automatically update tags for this project if file is inside the project
@@ -416,8 +432,15 @@ au BufWrite *.scala
             \ endif
 
 function! Test()
-    execute ":!echo ".g:current_project.", ".expand("%:p")
-    execute ":!echo ".stridx(expand("%:p"), g:current_project)
+    execute ':cd '.g:current_project
+    execute ':cd /development/projects/scala-algorithms'
+    " execute ":!echo ".g:current_project.", ".expand("%:p")
+    " execute ":!echo ".stridx(expand("%:p"), g:current_project)
+endfunction
+
+function! MakeCurrentProj()
+    execute ":cd ". g:current_project
+    execute ":make"
 endfunction
 
 function! ToProj(path_to_project)
@@ -427,14 +450,14 @@ function! ToProj(path_to_project)
         let g:current_project = a:path_to_project
     endif
     execute ":cd ". g:current_project
-    execute ":compiler! scala-fsc"
+    " execute ":compiler! scala-fsc"
 "    execute ":TlistAddFilesRecursive ./src"
     call system("ctags -R -f tags")
 endfunction
 
-nnoremap <F6> :make<cr>
+nnoremap <F6> :call MakeCurrentProj()<cr>
 nnoremap <F7> :copen<cr>
-nnoremap <F9> :!mvn scala:run -DmainClass=Main<cr>
 
-nnoremap <silent> <leader>cp :call ToProj(g:default_project)<cr>
+nnoremap <silent> <leader>cp :call ToProj(g:current_project)<cr>
+nnoremap <silent> <leader>ccp :call Test()<cr>
 "}}}
