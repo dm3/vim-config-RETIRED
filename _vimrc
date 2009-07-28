@@ -63,7 +63,13 @@ set tags=tags;/
 
 " Highlight all occurences of word under cursor
 highlight flicker guibg=LightCyan
- au CursorMoved <buffer> exe 'match flicker /\V\<'.escape(expand('<cword>'), '/').'\>/'
+au CursorMoved <buffer> exe 'match flicker /\V\<'.escape(expand('<cword>'), '/').'\>/'
+
+" use ghc functionality for haskell files
+au Bufenter *.hs compiler ghc
+" configure browser for haskell_doc.vim
+let g:haddock_browser = "C:\Program Files\Mozilla Firefox 3 Beta 5\firefox.exe"
+
 
 " Automatically cd into the directory that the file is in
 autocmd BufEnter * execute "chdir ".escape(expand("%:p:h"), ' ')
