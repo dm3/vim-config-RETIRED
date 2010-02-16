@@ -3,13 +3,14 @@
 " Last Modified: Last Modified: Ñá 2009-02-21 22:26:34 (FLE Standard Time)
 
 set nocompatible
-source $VIMRUNTIME/mswin.vim
+"source $VIMRUNTIME/mswin.vim
 source $VIM/vimfiles/scripts/unicodemacros.vim
-behave mswin
+"behave mswin
 
 " English, please
 set langmenu=en_gb.utf-8
-language en
+" 'Cannot set language to en' on arch
+" language en
 
 " Use english for spellchecking, but don't spellcheck by default
 if version >= 700
@@ -129,13 +130,6 @@ set smarttab
 set shiftwidth=4
 set softtabstop=4
 
-" Use better looking listchars if they are supported
-if has("multi_byte")
-    set listchars=tab:»\ ,extends:›,precedes:‹,trail:·,nbsp:?,eol:$
-else
-    set listchars=tab:>\ ,extends:>,precedes:<,trail:-,nbsp:%,eol:$
-endif
-
 "}}}
 "{{{Searching, Substituting
 
@@ -204,13 +198,11 @@ iab lastmod Last Modified: <c-r>=strftime(timestamp_format)<cr>
 
 " Favorite Color Scheme
 if has("gui_running")
-   "colorscheme inkpot
    " Remove Toolbar
    set guioptions-=T
-   "Terminus is AWESOME
-   set guifont=Terminus\ 9
+   " set guifont=?
 else
-   colorscheme metacosm
+   colorscheme inkpot
 endif
 
 "Status line gnarliness
@@ -282,7 +274,13 @@ function! JumpToLastPosition()
     endif
 endfunction
 
-set diffexpr=MyDiff()
+" MyDiff is a workaround for windows-gvim
+if has("unix")
+    set diffexpr=
+else
+    set diffexpr=MyDiff()
+endif
+
 function MyDiff()
   let opt = '-a --binary '
   if &diffopt =~ 'icase' | let opt = opt . '-i ' | endif
