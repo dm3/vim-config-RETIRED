@@ -3,9 +3,8 @@
 " Last Modified: Last Modified: бс 2009-02-21 22:26:34 (FLE Standard Time)
 
 set nocompatible
-"source $VIMRUNTIME/mswin.vim
+set t_Co=256
 source $VIM/vimfiles/scripts/unicodemacros.vim
-"behave mswin
 
 " English, please
 set langmenu=en_gb.utf-8
@@ -46,8 +45,8 @@ inoremap kk <Esc>
 
 " Keep backups in one place
 set backup
-set backupdir=$VIMRUNTIME/.vim/backup
-set directory=$VIMRUNTIME/.vim/tmp
+set backupdir=~/.vim/backup
+set directory=~/.vim/tmp
 
 "}}}
 "{{{Auto Commands
