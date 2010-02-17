@@ -201,7 +201,7 @@ if has("gui_running")
    set guioptions-=T
    " set guifont=?
 else
-   colorscheme inkpot
+   colorscheme zenburn
 endif
 
 "Status line gnarliness
