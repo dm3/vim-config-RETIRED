@@ -1,10 +1,10 @@
 " Filename:      .vimrc
 " Description:   Vim configuration file (GUI specific)
-" Last Modified: Last Modified: бс 2009-02-21 22:26:34 (FLE Standard Time)
+" Last Modified: Last Modified: Sun 2010-02-28 18:52:39 (+0200)
 
 set nocompatible
 set t_Co=256
-source $VIM/vimfiles/scripts/unicodemacros.vim
+source $HOME/.vim/scripts/unicodemacros.vim
 
 " English, please
 set langmenu=en_gb.utf-8
@@ -65,11 +65,13 @@ set tags=tags;/
 highlight flicker guibg=LightCyan
 au CursorMoved <buffer> exe 'match flicker /\V\<'.escape(expand('<cword>'), '/').'\>/'
 
+" remap localLeader to , when working with clojure files
+"au Bufenter *.clj let maplocalleader = ','
+
 " use ghc functionality for haskell files
 au Bufenter *.hs compiler ghc
 " configure browser for haskell_doc.vim
-let g:haddock_browser = "C:\Program Files\Mozilla Firefox 3 Beta 5\firefox.exe"
-
+let g:haddock_browser = "firefox"
 
 " Automatically cd into the directory that the file is in
 autocmd BufEnter * execute "chdir ".escape(expand("%:p:h"), ' ')
@@ -186,6 +188,14 @@ let tlist_def_scala_settings = 'scala;p:package;c:class;t:trait;' .
                                  \ 'c:case class;o:object;' .
                                  \ 'C:constant;l:local variable'
 
+" clojurevim
+let clj_highlight_builtins=1
+let clj_highlight_contrib=1
+let clj_paren_rainbow=1
+
+let clj_want_gorilla=1
+
+let vimclojure#NailgunClient='/usr/sbin/ng'
 "}}}
 " Abbreviations -----------------------------------------------------------{{{1
 
@@ -316,13 +326,6 @@ function! ToggleFold()
     endtry
 endfunction
 
-" Grep file under the current working directory
-function! GrepUnder(query)
-    execute "vimgrep ".expand(a:query)."j **"
-    echo Title
-    cwindow
-endfunction
-
 function! GetVisual() range
     let reg_save = getreg('"')
     let regtype_save = getregtype('"')
@@ -377,19 +380,15 @@ nnoremap <F1> <ESC> :FuzzyFinderFile <C-r>=expand('%:~:.')[:-1-len(expand('%:~:.
 map <leader>bu :FuzzyFinderBuffer<CR>
 
 " Like "project explorer" in Textmate
-map <leader>e :FuzzyFinderFile \*\*/<CR>
+map <leader>ex :FuzzyFinderFile \*\*/<CR>
 
 " Fuzzy's "refresh" method.
 map <leader>bc :FuzzyFinderRemoveCache<CR>
-map <leader>r :FuzzyFinderMruFile<CR>
+map <leader>rr :FuzzyFinderMruFile<CR>
 
 " Use \bm \ba for bookmark files
 "map <F7> :FuzzyFinderBookmark<CR>
 "map <S-F7> :FuzzyFinderAddBookmark<CR>
-
-" Fuzzy's "refresh" method.
-map <leader>bc :FuzzyFinderRemoveCache<CR>
-map <leader>r :FuzzyFinderMruFile<CR>
 "}}}
 
 " Start substitution with word under cursor
@@ -397,13 +396,11 @@ nnoremap <leader>z :%s/\<<c-r>=expand("<cword>")<cr>\>/
 vnoremap <leader>x :<c-u>%s/\<<c-r>*\>/
 vnoremap <leader>z :s/<c-r>=GetVisual()<cr>/
 
-" Start grep with word under cursor
-nnoremap <leader>G :GrepUnder /<c-r>=expand("<cword>")<cr>/g
-vnoremap <leader>G :<c-u>GrepUnder /<c-r>*/g
-
 " Standard tab navigation
-nnoremap <c-l> gt
-nnoremap <c-h> gT
+map <c-l> <c-w>l<cr>
+map <c-h> <c-w>h<cr>
+map <c-j> <c-w>j<cr>
+map <c-k> <c-w>k<cr>
 
 " Yank to end of line
 nnoremap Y y$
@@ -422,45 +419,4 @@ vmap <silent> <Leader>uc <Plug>VisualDeComment
 vmap <silent> <Leader>eht <Plug>VisualTraditional
 vmap <silent> <Leader>ehf <Plug>VisualFirstLine
 "}}}
-"{{{ Current Project
-let g:project_prefix = '/development/projects/'
-let g:project_map = {'actors': g:project_prefix.'scala-actors', 'scala-algorithms': g:project_prefix.'scala-algorithms', 'scala-maven': g:project_prefix.'maven-scala-plugin' }
-let g:default_project = g:project_prefix.'scala-algortihms'
-let g:current_project = g:default_project
-
-" automatically update tags for this project if file is inside the project
-au BufWrite *.scala
-            \ if stridx(expand("%:p"), g:current_project) > -1 |
-                \ call system("ctags -a -f ". g:current_project ."/tags --extra=+q " . expand("%:p")) |
-            \ endif
-
-function! Test()
-    execute ':cd '.g:current_project
-    execute ':cd /development/projects/scala-algorithms'
-    " execute ":!echo ".g:current_project.", ".expand("%:p")
-    " execute ":!echo ".stridx(expand("%:p"), g:current_project)
-endfunction
-
-function! MakeCurrentProj()
-    execute ":cd ". g:current_project
-    execute ":make"
-endfunction
-
-function! ToProj(path_to_project)
-    if has_key(g:project_map, a:path_to_project)
-        let g:current_project = g:project_map[a:path_to_project]
-    else
-        let g:current_project = a:path_to_project
-    endif
-    execute ":cd ". g:current_project
-    " execute ":compiler! scala-fsc"
-"    execute ":TlistAddFilesRecursive ./src"
-    call system("ctags -R -f tags")
-endfunction
-
-nnoremap <F6> :call MakeCurrentProj()<cr>
-nnoremap <F7> :copen<cr>
-
-nnoremap <silent> <leader>cp :call ToProj(g:current_project)<cr>
-nnoremap <silent> <leader>ccp :call Test()<cr>
 "}}}
