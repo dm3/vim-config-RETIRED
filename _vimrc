@@ -1,6 +1,6 @@
 " Filename:      .vimrc
 " Description:   Vim configuration file (GUI specific)
-" Last Modified: Last Modified: Sun 2010-02-28 18:52:39 (+0200)
+" Last Modified: Last Modified: Ñá 2009-02-21 22:26:34 (FLE Standard Time)
 
 set nocompatible
 set t_Co=256
@@ -397,10 +397,18 @@ vnoremap <leader>x :<c-u>%s/\<<c-r>*\>/
 vnoremap <leader>z :s/<c-r>=GetVisual()<cr>/
 
 " Standard tab navigation
-map <c-l> <c-w>l<cr>
-map <c-h> <c-w>h<cr>
-map <c-j> <c-w>j<cr>
-map <c-k> <c-w>k<cr>
+nnoremap <c-l> <c-w>l
+nnoremap <c-h> <c-w>h
+nnoremap <c-j> <c-w>j
+nnoremap <c-k> <c-w>k
+vnoremap <c-l> <c-w>l
+vnoremap <c-h> <c-w>h
+vnoremap <c-j> <c-w>j
+vnoremap <c-k> <c-w>k
+
+" Yank to clipboard/paste from clipboard via xclip
+vnoremap <F6> :!xclip -f -sel clip<CR>
+nnoremap <F7> :-1r !xclip -o -sel clip<CR>
 
 " Yank to end of line
 nnoremap Y y$
