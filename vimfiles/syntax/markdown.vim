@@ -71,6 +71,9 @@ syntax region mkdBlockquote start=/^\s*>/       end=/$/           contains=mkdLi
 syntax region mkdCode       start="<pre[^>]*>"  end="</pre>"
 syntax region mkdCode       start="<code[^>]*>" end="</code>"
 
+" pygments + jekyll
+syntax region mkdCode       start="{%\s*highlight\s*[^%}]*%}" end="{%\s*endhighlight\s*%}"
+
 " HTML headings
 syntax region htmlH1       start="^\s*#"                   end="\($\|#\+\)" contains=@Spell
 syntax region htmlH2       start="^\s*##"                  end="\($\|#\+\)" contains=@Spell
