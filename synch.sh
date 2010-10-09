@@ -20,7 +20,8 @@ else
             if [[ -n "$CYGWIN_HOME" ]]; then
                 echo "lala"
             else
-                echo "trololo"
+                cp _vimrc ~/.vimrc
+                rsync --exclude 'tmp' --exclude 'backup' -av vimfiles/ ~/.vim/
             fi
         ;;
     esac
