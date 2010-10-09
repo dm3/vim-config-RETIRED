@@ -189,11 +189,9 @@ let tlist_def_scala_settings = 'scala;p:package;c:class;t:trait;' .
                                  \ 'C:constant;l:local variable'
 
 " clojurevim
-let clj_highlight_builtins=1
-let clj_highlight_contrib=1
-let clj_paren_rainbow=1
-
-let clj_want_gorilla=1
+let vimclojure#HighlighBuiltins=1
+let vimclojure#ParenRainbow=1
+let vimclojure#WantNailgun=1
 
 let vimclojure#NailgunClient='/usr/sbin/ng'
 "}}}

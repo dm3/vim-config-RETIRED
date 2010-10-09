@@ -13,7 +13,7 @@ else
                 cp -r "$VIMRUNTIME/../vimfiles" .
             else
                 cp ~/.vimrc _vimrc
-                rsync --exclude 'tmp' --exclude 'backup' -av ~/.vim/ vimfiles/
+                rsync --exclude '.netrwhist' --exclude 'tmp' --exclude 'backup' -av ~/.vim/ vimfiles/
             fi
         ;;
         OUT)
