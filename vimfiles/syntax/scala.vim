@@ -2,8 +2,6 @@
 " Language   : Scala (http://scala-lang.org/)
 " Maintainers: Stefan Matthias Aust, Julien Wetterwald
 " Last Change: 2007 June 13
-" Revision   : $Id: scala.vim 15234 2008-05-29 21:54:59Z stepancheg $
-"        $URL: https://lampsvn.epfl.ch/svn-repos/scala/scala-tool-support/trunk/src/vim/syntax/scala.vim $
 
 if version < 600
   syntax clear
@@ -18,7 +16,7 @@ syn sync minlines=50
 syn keyword scalaKeyword abstract case catch do else extends final finally for forSome if implicit lazy match new null override private protected requires return sealed super this throw try type while with yield
 syn match scalaKeyword "=>"
 syn match scalaKeyword "<-"
-syn match scalaKeyword "_"
+syn match scalaKeyword "\<_\>"
 
 syn match scalaOperator ":\{2,\}" "this is not a type
 
@@ -98,6 +96,8 @@ syn region scalaXmlEscape matchgroup=scalaXmlEscapeSpecial start="{" matchgroup=
 syn match scalaXmlQuote "&[^;]\+;" contained
 syn match scalaXmlComment "<!--\_[^>]*-->" contained
 
+syn match scalaAnnotation "@[^ =:;()[]\+"
+
 syn sync fromstart
 
 " map Scala groups to standard groups
@@ -140,6 +140,7 @@ hi link scalaDefSpecializer Function
 hi link scalaClassName Special
 hi link scalaClassSpecializer Special
 hi link scalaConstructor Special
+hi link scalaAnnotation Special
 hi link scalaConstructorSpecializer scalaConstructor
 
 let b:current_syntax = "scala"

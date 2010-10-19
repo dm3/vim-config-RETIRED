@@ -192,6 +192,7 @@ let tlist_def_scala_settings = 'scala;p:package;c:class;t:trait;' .
 let vimclojure#HighlighBuiltins=1
 let vimclojure#ParenRainbow=1
 let vimclojure#WantNailgun=1
+let vimclojure#SplitPos="bottom"
 
 let vimclojure#NailgunClient='/usr/sbin/ng'
 "}}}
