@@ -14,7 +14,7 @@ set cpo&vim
 
 let b:undo_indent = "setlocal ai< si< lw< et< sts< sw< inde< indk<"
 
-setlocal autoindent expandtab nosmartindent
+setlocal noautoindent expandtab nosmartindent
 
 setlocal softtabstop=2
 setlocal shiftwidth=2
@@ -26,12 +26,19 @@ if exists("*searchpairpos")
 function! s:MatchPairs(open, close, stopat)
 	" Stop only on vector and map [ resp. {. Ignore the ones in strings and
 	" comments.
-	return searchpairpos(a:open, '', a:close, 'bWn',
-				\ 'vimclojure#SynIdName() !~ "clojureParen\\d"',
-				\ a:stopat)
+	if a:stopat == 0
+		let stopat = max([line(".") - g:vimclojure#SearchThreshold, 0])
+	else
+		let stopat = a:stopat
+	endif
+
+	let pos = searchpairpos(a:open, '', a:close, 'bWn',
+				\ 'vimclojure#util#SynIdName() !~ "clojureParen\\d"',
+				\ stopat)
+	return [ pos[0], virtcol(pos) ]
 endfunction
 
-function! VimClojureCheckForStringWorker()
+function! ClojureCheckForStringWorker() dict
 	" Check whether there is the last character of the previous line is
 	" highlighted as a string. If so, we check whether it's a ". In this
 	" case we have to check also the previous character. The " might be the
@@ -45,17 +52,17 @@ function! VimClojureCheckForStringWorker()
 
 	call cursor(nb, 0)
 	call cursor(0, col("$") - 1)
-	if vimclojure#SynIdName() != "clojureString"
+	if vimclojure#util#SynIdName() != "clojureString"
 		return -1
 	endif
 
 	" This will not work for a " in the first column...
-	if vimclojure#Yank('l', 'normal! "lyl') == '"'
+	if vimclojure#util#Yank('l', 'normal! "lyl') == '"'
 		call cursor(0, col("$") - 2)
-		if vimclojure#SynIdName() != "clojureString"
+		if vimclojure#util#SynIdName() != "clojureString"
 			return -1
 		endif
-		if vimclojure#Yank('l', 'normal! "lyl') != '\\'
+		if vimclojure#util#Yank('l', 'normal! "lyl') != '\\'
 			return -1
 		endif
 		call cursor(0, col("$") - 1)
@@ -70,8 +77,48 @@ function! VimClojureCheckForStringWorker()
 	return indent(".")
 endfunction
 
-function! VimClojureCheckForString()
-	return vimclojure#WithSavedPosition({'f': function("VimClojureCheckForStringWorker")})
+function! s:CheckForString()
+	return vimclojure#util#WithSavedPosition({
+				\ 'f' : function("ClojureCheckForStringWorker")
+				\ })
+endfunction
+
+function! ClojureIsMethodSpecialCaseWorker() dict
+	" Find the next enclosing form.
+	call vimclojure#util#MoveBackward()
+
+	" Special case: we are at a '(('.
+	if vimclojure#util#Yank('l', 'normal! "lyl') == '('
+		return 0
+	endif
+	call cursor(self.pos)
+
+	let nextParen = s:MatchPairs('(', ')', 0)
+
+	" Special case: we are now at toplevel.
+	if nextParen == [0, 0]
+		return 0
+	endif
+	call cursor(nextParen)
+
+	call vimclojure#util#MoveForward()
+	let keyword = vimclojure#util#Yank('l', 'normal! "lye')
+	if index([ 'deftype', 'defrecord', 'reify', 'proxy',
+				\ 'extend-type', 'extend-protocol',
+				\ 'letfn' ], keyword) >= 0
+		return 1
+	endif
+
+	return 0
+endfunction
+
+function! s:IsMethodSpecialCase(position)
+	let closure = {
+				\ 'pos': a:position,
+				\ 'f' : function("ClojureIsMethodSpecialCaseWorker")
+				\ }
+
+	return vimclojure#util#WithSavedPosition(closure)
 endfunction
 
 function! GetClojureIndent()
@@ -82,7 +129,7 @@ function! GetClojureIndent()
 
 	" We have to apply some heuristics here to figure out, whether to use
 	" normal lisp indenting or not.
-	let i = VimClojureCheckForString()
+	let i = s:CheckForString()
 	if i > -1
 		return i
 	endif
@@ -119,6 +166,8 @@ function! GetClojureIndent()
 	" Now we have to reimplement lispindent. This is surprisingly easy, as
 	" soon as one has access to syntax items.
 	"
+	" - Check whether we are in a special position after deftype, defrecord,
+	"   reify, proxy or letfn. These are special cases.
 	" - Get the next keyword after the (.
 	" - If its first character is also a (, we have another sexp and align
 	"   one column to the right of the unmatched (.
@@ -127,7 +176,11 @@ function! GetClojureIndent()
 	" - If not, we check whether it is last word in the line. In that case
 	"   we again use ( + sw for indent.
 	" - In any other case we use the column of the end of the word + 2.
-	call cursor(paren[0] , paren[1])
+	call cursor(paren)
+
+	if s:IsMethodSpecialCase(paren)
+		return paren[1] + &shiftwidth - 1
+	endif
 
 	" In case we are at the last character, we use the paren position.
 	if col("$") - 1 == paren[1]
@@ -136,12 +189,9 @@ function! GetClojureIndent()
 
 	" In case after the paren is a whitespace, we search for the next word.
 	normal! l
-	let reg = getreg("l")
-	normal! "lyl
-	if getreg("l") == ' '
+	if vimclojure#util#Yank('l', 'normal! "lyl') == ' '
 		normal! w
 	endif
-	call setreg("l", reg)
 
 	" If we moved to another line, there is no word after the (. We
 	" use the ( position for indent.
@@ -151,10 +201,7 @@ function! GetClojureIndent()
 
 	" We still have to check, whether the keyword starts with a (, [ or {.
 	" In that case we use the ( position for indent.
-	let reg = getreg("l")
-	normal! "lye
-	let w = getreg("l")
-	call setreg("l", reg)
+	let w = vimclojure#util#Yank('l', 'normal! "lye')
 	if stridx('([{', w[0]) > 0
 		return paren[1]
 	endif
@@ -163,13 +210,27 @@ function! GetClojureIndent()
 		return paren[1] + &shiftwidth - 1
 	endif
 
+	" XXX: Slight glitch here with special cases. However it's only
+	" a heureustic. Offline we can't do more.
+	if g:vimclojure#FuzzyIndent
+				\ && w != 'with-meta'
+				\ && w != 'clojure.core/with-meta'
+		for pat in split(g:vimclojure#FuzzyIndentPatterns, ",")
+			if w =~ '\(^\|/\)' . pat . '$'
+						\ && w !~ '\(^\|/\)' . pat . '\*$'
+						\ && w !~ '\(^\|/\)' . pat . '-fn$'
+				return paren[1] + &shiftwidth - 1
+			endif
+		endfor
+	endif
+
 	normal! w
 	if paren[0] < line(".")
 		return paren[1] + &shiftwidth - 1
 	endif
 
 	normal! ge
-	return col(".") + 1
+	return virtcol(".") + 1
 endfunction
 
 setlocal indentexpr=GetClojureIndent()
