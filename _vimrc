@@ -189,12 +189,14 @@ let tlist_def_scala_settings = 'scala;p:package;c:class;t:trait;' .
                                  \ 'C:constant;l:local variable'
 
 " clojurevim
+let vimclojure#DynamicHighlighting=1
 let vimclojure#HighlighBuiltins=1
+let vimclojure#HighlightContrib=1
 let vimclojure#ParenRainbow=1
 let vimclojure#WantNailgun=1
 let vimclojure#SplitPos="bottom"
 
-let vimclojure#NailgunClient='/usr/sbin/ng'
+let vimclojure#NailgunClient='/usr/local/bin/ng'
 "}}}
 " Abbreviations -----------------------------------------------------------{{{1
 
